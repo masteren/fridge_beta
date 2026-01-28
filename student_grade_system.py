@@ -1,6 +1,6 @@
 import argparse
 import json
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -57,7 +57,10 @@ class StudentManager:
         self.save()
 
     def update_student(
-        self, student_id: str, name: Optional[str], scores: Optional[Dict[str, float]]
+        self,
+        student_id: str,
+        name: Optional[str],
+        scores: Optional[Dict[str, float]],
     ) -> None:
         if student_id not in self.students:
             raise ValueError(f"未找到学号 {student_id}")
@@ -96,14 +99,18 @@ def parse_scores(scores: List[str]) -> Dict[str, float]:
     parsed: Dict[str, float] = {}
     for score in scores:
         if "=" not in score:
-            raise ValueError("成绩格式应为 课程=分数，例如 Math=95")
+            raise ValueError(
+                "成绩格式应为 课程=分数，例如 Math=95"
+            )
         course, value = score.split("=", 1)
         parsed[course] = float(value)
     return parsed
 
 
 def format_student(student: Student) -> str:
-    scores = ", ".join(f"{course}:{value}" for course, value in student.scores.items())
+    scores = ", ".join(
+        f"{course}:{value}" for course, value in student.scores.items()
+    )
     return (
         f"学号: {student.student_id}\n"
         f"姓名: {student.name}\n"
@@ -119,12 +126,16 @@ def build_parser() -> argparse.ArgumentParser:
     add_parser = subparsers.add_parser("add", help="添加学生")
     add_parser.add_argument("student_id", help="学号")
     add_parser.add_argument("name", help="姓名")
-    add_parser.add_argument("scores", nargs="*", help="课程成绩，例如 Math=95")
+    add_parser.add_argument(
+        "scores", nargs="*", help="课程成绩，例如 Math=95"
+    )
 
     update_parser = subparsers.add_parser("update", help="更新学生信息")
     update_parser.add_argument("student_id", help="学号")
     update_parser.add_argument("--name", help="新的姓名")
-    update_parser.add_argument("--scores", nargs="*", help="课程成绩，例如 Math=95")
+    update_parser.add_argument(
+        "--scores", nargs="*", help="课程成绩，例如 Math=95"
+    )
 
     delete_parser = subparsers.add_parser("delete", help="删除学生")
     delete_parser.add_argument("student_id", help="学号")
@@ -144,13 +155,17 @@ def main() -> None:
     manager = StudentManager()
 
     if args.command == "add":
-        scores = parse_scores(args.scores) if args.scores else {}
-        student = Student(student_id=args.student_id, name=args.name, scores=scores)
+        scores_for_add = parse_scores(args.scores) if args.scores else {}
+        student = Student(
+            student_id=args.student_id,
+            name=args.name,
+            scores=scores_for_add,
+        )
         manager.add_student(student)
         print("添加成功")
     elif args.command == "update":
-        scores = parse_scores(args.scores) if args.scores else None
-        manager.update_student(args.student_id, args.name, scores)
+        scores_for_update = parse_scores(args.scores) if args.scores else None
+        manager.update_student(args.student_id, args.name, scores_for_update)
         print("更新成功")
     elif args.command == "delete":
         manager.delete_student(args.student_id)
