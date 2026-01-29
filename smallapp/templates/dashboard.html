@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% set title="ダッシュボード | AI Pantry OS" %}
+{% set active="dashboard" %}
+{% set header_title="ダッシュボード" %}
+{% set header_subtitle="履歴・統計・状態をまとめて表示" %}
+
+{% block content %}
+  <div class="pagehead">
+    <div>
+      <h2>ダッシュボード</h2>
+      <p>AI認識履歴 / 食材変動 / レシピ実行 / 栄養スコアをまとめて追跡。</p>
+    </div>
+    <div class="smallrow">
+      <span class="pill">User: {{ user.username }}</span>
+      <span class="pill">DB: sqlite</span>
+    </div>
+  </div>
+
+  <div class="grid cols-4">
+    <div class="kpi-card">
+      <div class="row"><div><span>AI認識回数</span><div class="u-mt8"><strong>7</strong></div></div><span class="dot violet"></span></div>
+      <div class="bar"><i style="width:46%"></i></div>
+    </div>
+    <div class="kpi-card">
+      <div class="row"><div><span>記録レシピ</span><div class="u-mt8"><strong>12</strong></div></div><span class="dot blue"></span></div>
+      <div class="bar"><i style="width:62%"></i></div>
+    </div>
+    <div class="kpi-card">
+      <div class="row"><div><span>平均スコア</span><div class="u-mt8"><strong>B</strong></div></div><span class="dot green"></span></div>
+      <div class="bar"><i style="width:70%"></i></div>
+    </div>
+    <div class="kpi-card">
+      <div class="row"><div><span>期限アラート</span><div class="u-mt8"><strong>3</strong></div></div><span class="dot red"></span></div>
+      <div class="bar"><i style="width:32%"></i></div>
+    </div>
+  </div>
+
+  <div class="u-mt16 grid cols-2">
+    <div class="card">
+      <div class="card-h">
+        <h3>AI認識ログ</h3>
+        <small>latest</small>
+      </div>
+      <div class="card-b">
+        <table class="table">
+          <thead><tr><th>日時</th><th>検出数</th><th class="right">状態</th></tr></thead>
+          <tbody>
+            <tr><td class="muted">2026-01-29 10:12</td><td>6</td><td class="right"><span class="tag"><b>OK</b> 反映済</span></td></tr>
+            <tr><td class="muted">2026-01-28 21:05</td><td>4</td><td class="right"><span class="tag"><b>OK</b> 反映済</span></td></tr>
+            <tr><td class="muted">2026-01-27 19:44</td><td>8</td><td class="right"><span class="tag"><b>WARN</b> 重複あり</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">
+        <h3>最近作ったレシピ</h3>
+        <small>history</small>
+      </div>
+      <div class="card-b">
+        <table class="table">
+          <thead><tr><th>料理</th><th>スコア</th><th>所要</th><th class="right">操作</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>卵と野菜のスープ</td>
+              <td><span class="score A">A</span></td>
+              <td class="muted">10分</td>
+              <td class="right"><a class="btn small" href="{{ url_for('recipe_detail', recipe_id=2) }}">詳細</a></td>
+            </tr>
+            <tr>
+              <td>鶏むね肉の塩レモン</td>
+              <td><span class="score B">B</span></td>
+              <td class="muted">15分</td>
+              <td class="right"><a class="btn small" href="{{ url_for('recipe_detail', recipe_id=1) }}">詳細</a></td>
+            </tr>
+            <tr>
+              <td>ブロッコリー胡麻和え</td>
+              <td><span class="score A">A</span></td>
+              <td class="muted">8分</td>
+              <td class="right"><a class="btn small" href="{{ url_for('recipe_detail', recipe_id=4) }}">詳細</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

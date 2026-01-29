@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% set title="栄養スコア | AI Pantry OS" %}
+{% set active="nutrition" %}
+{% set header_title="栄養スコア" %}
+{% set header_subtitle="A–D評価と1週間の傾向" %}
+
+{% block head %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+  <div class="pagehead">
+    <div>
+      <h2>栄養評価</h2>
+      <p>食材・レシピ履歴から、簡易栄養バランスを可視化します。</p>
+    </div>
+    <div class="smallrow">
+      <span class="pill">Score: {{ score_data.grade }}</span>
+      <span class="pill">Week: {{ labels[0] }} ~ {{ labels[-1] }}</span>
+    </div>
+  </div>
+
+  <div class="grid cols-3">
+    <div class="card">
+      <div class="card-h">
+        <h3>総合スコア</h3>
+        <small>A–D</small>
+      </div>
+      <div class="card-b">
+        <div class="smallrow">
+          <div>
+            <div class="helper">本日の評価</div>
+            <div class="u-mt8"><strong style="font-size:30px;">{{ score_data.grade }}</strong> <span class="u-muted">（{{ score_data.score }}点）</span></div>
+          </div>
+          <div class="score {{ score_data.grade }}" style="width:56px;height:56px;border-radius:18px;font-size:20px;">{{ score_data.grade }}</div>
+        </div>
+        <div class="u-mt12 helper">
+          {% for reason in score_data.reasons %}
+            <div>{{ reason }}</div>
+          {% endfor %}
+        </div>
+        <div class="u-mt12">
+          <span class="tag"><b>kcal</b> {{ today_totals.kcal }}</span>
+          <span class="tag"><b>protein</b> {{ today_totals.protein }}g</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">
+        <h3>内訳（目安）</h3>
+        <small>macro</small>
+      </div>
+      <div class="card-b">
+        <table class="table">
+          <thead><tr><th>項目</th><th class="right">状態</th></tr></thead>
+          <tbody>
+            <tr><td>タンパク質</td><td class="right"><span class="tag"><b>{{ today_totals.protein }}</b> g</span></td></tr>
+            <tr><td>カロリー</td><td class="right"><span class="tag"><b>{{ today_totals.kcal }}</b> kcal</span></td></tr>
+            <tr><td>野菜スコア</td><td class="right"><span class="tag"><b>{{ today_totals.veg_score }}</b></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">
+        <h3>改善提案</h3>
+        <small>next action</small>
+      </div>
+      <div class="card-b">
+        <div class="grid" style="gap:10px;">
+          {% for alert in alerts %}
+            <div class="kpi-card">
+              <div class="row">
+                <div>
+                  <div class="tag"><b>Tip</b> {{ alert }}</div>
+                  <div class="u-mt8 helper">不足しがちな栄養を意識して追加しましょう。</div>
+                </div>
+                <span class="dot green"></span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="u-mt16 card">
+    <div class="card-h">
+      <h3>1週間トレンド</h3>
+      <small>protein / veg / carbs</small>
+    </div>
+    <div class="card-b">
+      <canvas id="weekChart" height="110"></canvas>
+      <div class="helper u-mt8">※ DBの履歴から算出。</div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const ctx = document.getElementById('weekChart');
+  const labels = {{ labels | tojson }};
+  const kcalSeries = {{ kcal_series | tojson }};
+  const proteinSeries = {{ protein_series | tojson }};
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        { label:'kcal', data:kcalSeries, tension:.35, borderColor:'rgba(53,246,255,.8)' },
+        { label:'protein', data:proteinSeries, tension:.35, borderColor:'rgba(48,255,168,.8)' }
+      ]
+    },
+    options: {
+      responsive:true,
+      plugins:{ legend:{ labels:{ color:'rgba(255,255,255,.75)' } } },
+      scales:{
+        x:{ ticks:{ color:'rgba(255,255,255,.65)' }, grid:{ color:'rgba(255,255,255,.06)' } },
+        y:{ ticks:{ color:'rgba(255,255,255,.65)' }, grid:{ color:'rgba(255,255,255,.06)' } },
+      }
+    }
+  });
+</script>
+{% endblock %}

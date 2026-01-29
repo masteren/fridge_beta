@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% set title="レシピ提案 | AI Pantry OS" %}
+{% set active="recipes" %}
+{% set header_title="レシピ提案" %}
+{% set header_subtitle="所持食材から作れる料理を推薦" %}
+
+{% block content %}
+  <div class="pagehead">
+    <div>
+      <h2>作れるレシピ</h2>
+      <p>不足栄養（野菜/食物繊維など）を補う優先度で並び替え可能。</p>
+    </div>
+    <div class="smallrow">
+      <span class="pill">Filter: 時短</span>
+      <span class="pill">Goal: 低脂質</span>
+      <a class="btn" href="{{ url_for('pantry') }}">所持食材へ</a>
+    </div>
+  </div>
+
+  <div class="grid cols-3">
+    {% for r in recipes or [
+      {'id':1,'name':'鶏むね肉の塩レモン','time':'15分','lvl':'★☆☆','score':'B','tags':['高タンパク','時短']},
+      {'id':2,'name':'卵と野菜のスープ','time':'10分','lvl':'★☆☆','score':'A','tags':['野菜補給','低脂質']},
+      {'id':3,'name':'ツナ豆腐ボウル','time':'7分','lvl':'★☆☆','score':'B','tags':['洗い物少','時短']},
+      {'id':4,'name':'ブロッコリー胡麻和え','time':'8分','lvl':'★☆☆','score':'A','tags':['食物繊維','副菜']},
+      {'id':5,'name':'牛乳オートミール','time':'5分','lvl':'★☆☆','score':'C','tags':['朝食','糖質']},
+      {'id':6,'name':'卵チャーハン（控えめ油）','time':'12分','lvl':'★★☆','score':'C','tags':['満腹','調整可']}
+    ] %}
+      <a class="card" href="{{ url_for('recipe_detail', recipe_id=r.id) }}">
+        <div class="card-h">
+          <h3>{{ r.title if r.title is defined else r.name }}</h3>
+          <span class="score {{ r.score if r.score is defined else 'B' }}">{{ r.score if r.score is defined else 'B' }}</span>
+        </div>
+        <div class="card-b">
+          <div class="smallrow">
+            <span class="tag"><b>Time</b> {{ r.time if r.time is defined else '10分' }}</span>
+            <span class="tag"><b>Lv</b> {{ r.lvl if r.lvl is defined else '★☆☆' }}</span>
+          </div>
+          <div class="u-mt12" style="display:flex; gap:8px; flex-wrap:wrap;">
+            {% if r.tags is defined %}
+              {% for t in r.tags %}
+                <span class="pill">{{ t }}</span>
+              {% endfor %}
+            {% elif r.match_items is defined and r.match_items %}
+              {% for t in r.match_items %}
+                <span class="pill">{{ t.name }}</span>
+              {% endfor %}
+            {% else %}
+              <span class="pill">おすすめ</span>
+            {% endif %}
+          </div>
+          <div class="u-mt12 helper">クリックで手順・栄養・不足改善ポイントを表示。</div>
+          <div class="u-mt12">
+            <span class="btn small primary">詳細を見る</span>
+          </div>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+{% endblock %}

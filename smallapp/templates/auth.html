@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% set title="ログイン | AI Pantry OS" %}
+{% set header_title="ログイン" %}
+{% set header_subtitle="アカウントでログイン" %}
+
+{% block content %}
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-left">
+        <div class="brand">
+          <div class="logo"></div>
+          <div>
+            <h1>AI Pantry OS</h1>
+            <small>食材認識・栄養最適化サポート</small>
+          </div>
+        </div>
+
+        <div class="u-mt16 hero" style="box-shadow:none;">
+          <h2 style="font-size:20px;">写真だけで、食生活を管理。</h2>
+          <p class="u-mb0">
+            AIで食材を自動抽出し、料理提案と栄養スコアを提示。
+            留学生・一人暮らし向けに、時短と健康を両立。
+          </p>
+          <div class="u-mt12 helper">
+            Demo Login: <kbd>demo</kbd> / <kbd>demo1234</kbd>
+          </div>
+        </div>
+
+        <div class="u-mt16 side-card" style="margin:0;">
+          <div class="kpi">
+            <strong>Core</strong><span>AI認識 → リスト → レシピ → 栄養</span>
+          </div>
+          <p>この画面はUI。認証はFlaskのデモログインに対応。</p>
+        </div>
+      </div>
+
+      <div class="auth-right">
+        <h2 style="margin:0; font-size:20px;">ログイン</h2>
+        <p class="helper">アカウントでログインして続行。</p>
+        {% if error %}
+          <p class="helper">{{ error }}</p>
+        {% endif %}
+
+        <form class="form" method="post" action="/login">
+          <label>ユーザー名</label>
+          <input name="username" placeholder="demo" required />
+          <label>パスワード</label>
+          <input name="password" type="password" placeholder="••••••••" required />
+          <div class="smallrow">
+            <label style="display:flex; gap:10px; align-items:center;">
+              <input type="checkbox" style="width:auto;"> <span class="helper">ログイン状態を保持</span>
+            </label>
+            <span class="helper">パスワードを忘れた</span>
+          </div>
+          <button class="btn primary block" type="submit">ログイン</button>
+        </form>
+
+        <div class="hr"></div>
+
+        <h2 style="margin:0; font-size:20px;">新規登録</h2>
+        <p class="helper">デモ用に簡易登録できます。</p>
+        <form class="form" method="post" action="/register">
+          <label>ユーザー名</label>
+          <input name="username" placeholder="new-user" required />
+          <label>パスワード</label>
+          <input name="password" type="password" placeholder="••••••••" required />
+          <button class="btn block" type="submit">登録する</button>
+          <div class="hr"></div>
+          <a class="btn block" href="{{ url_for('home') }}">ゲストとして入る</a>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}

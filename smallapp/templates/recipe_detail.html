@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% set title="レシピ詳細 | AI Pantry OS" %}
+{% set active="recipes" %}
+{% set header_title="レシピ詳細" %}
+{% set header_subtitle="手順・栄養・不足改善ポイント" %}
+
+{% block content %}
+  <div class="pagehead">
+    <div>
+      <h2>{{ recipe.title if recipe else "卵と野菜のスープ" }}</h2>
+      <p>所持食材の一致率・不足栄養の改善度で評価。</p>
+    </div>
+    <div class="smallrow">
+      <a class="btn" href="{{ url_for('recipes') }}">← レシピ一覧</a>
+      {% if recipe %}
+        <form action="/recipes/{{ recipe.id }}/cook" method="post">
+          <button class="btn primary" type="submit">作った（記録）</button>
+        </form>
+      {% else %}
+        <button class="btn primary" type="button">作った（記録）</button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <div class="card-h">
+        <h3>概要</h3>
+        <small>match / score</small>
+      </div>
+      <div class="card-b">
+        <div class="grid cols-2">
+          <div class="kpi-card">
+            <div class="row">
+              <div><span>一致率</span><div class="u-mt8"><strong>86%</strong></div></div>
+              <span class="dot green"></span>
+            </div>
+            <div class="bar"><i style="width:86%"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="row">
+              <div><span>栄養スコア</span><div class="u-mt8"><strong>B</strong> <span class="u-muted">（改善見込み）</span></div></div>
+              <div class="score B">B</div>
+            </div>
+            <div class="bar"><i style="width:72%"></i></div>
+          </div>
+        </div>
+
+        <div class="u-mt12 smallrow">
+          <span class="tag"><b>Time</b> 10分</span>
+          <span class="tag"><b>Lv</b> ★☆☆</span>
+          <span class="tag"><b>Goal</b> 低脂質</span>
+        </div>
+
+        <div class="hr"></div>
+
+        <h3 style="margin:0 0 10px; font-size:14px;">不足改善ポイント</h3>
+        <div class="grid" style="gap:10px;">
+          <div class="kpi-card">
+            <div class="row">
+              <div>
+                <div class="tag"><b>Improve</b> 野菜</div>
+                <div class="u-mt8 helper">葉物を追加すると A 評価に到達しやすい。</div>
+              </div>
+              <span class="dot amber"></span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="row">
+              <div>
+                <div class="tag"><b>Keep</b> タンパク質</div>
+                <div class="u-mt8 helper">卵 + 鶏胸肉で十分。脂質は控えめに。</div>
+              </div>
+              <span class="dot green"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">
+        <h3>材料 / 手順</h3>
+        <small>step-by-step</small>
+      </div>
+      <div class="card-b">
+        <h3 style="margin:0 0 10px; font-size:14px;">材料</h3>
+        <table class="table">
+          <thead><tr><th>食材</th><th>量</th><th>備考</th></tr></thead>
+          <tbody>
+            {% if ingredients %}
+              {% for ing in ingredients %}
+                <tr>
+                  <td>{{ ing.name }}</td>
+                  <td class="muted">{{ ing.quantity }}{{ ing.unit }}</td>
+                  <td class="muted">—</td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr><td>卵</td><td class="muted">2個</td><td class="muted">溶いておく</td></tr>
+              <tr><td>ブロッコリー</td><td class="muted">1/2株</td><td class="muted">冷凍でもOK</td></tr>
+              <tr><td>鶏ガラスープ</td><td class="muted">小さじ2</td><td class="muted">塩で調整</td></tr>
+              <tr><td>水</td><td class="muted">400ml</td><td class="muted">—</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+
+        <div class="u-mt12"></div>
+
+        <h3 style="margin:0 0 10px; font-size:14px;">手順</h3>
+        <table class="table">
+          <thead><tr><th>#</th><th>内容</th><th class="right">目安</th></tr></thead>
+          <tbody>
+            {% if steps %}
+              {% for step in steps %}
+                <tr>
+                  <td class="muted">{{ loop.index }}</td>
+                  <td>{{ step }}</td>
+                  <td class="right muted">—</td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr><td class="muted">1</td><td>鍋に水・スープを入れて沸かす</td><td class="right muted">2分</td></tr>
+              <tr><td class="muted">2</td><td>ブロッコリーを入れて加熱</td><td class="right muted">3分</td></tr>
+              <tr><td class="muted">3</td><td>溶き卵を回し入れて完成</td><td class="right muted">1分</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+
+        <div class="u-mt12 smallrow">
+          <button class="btn">買い物リストへ</button>
+          <button class="btn primary">このレシピを保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

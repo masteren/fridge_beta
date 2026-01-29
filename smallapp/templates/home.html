@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% set title="ホーム | AI Pantry OS" %}
+{% set active="home" %}
+{% set header_title="ホーム" %}
+{% set header_subtitle="今日の状態を一目で確認" %}
+
+{% block content %}
+  <section class="hero">
+    <div class="row">
+      <div>
+        <h2>冷蔵庫の写真から、食生活を最適化。</h2>
+        <p>
+          写真アップロード → AI 食材認識 → 所持食材リスト化 →
+          作れる料理提案 → 栄養スコア（A–D）と1週間傾向を可視化。
+        </p>
+        <div class="cta">
+          <a class="btn primary" href="{{ url_for('recognize') }}">AI認識を開始</a>
+          <a class="btn" href="{{ url_for('pantry') }}">所持食材を見る</a>
+          <a class="btn" href="{{ url_for('recipes') }}">レシピ提案へ</a>
+        </div>
+      </div>
+      <div style="min-width: 280px; max-width: 360px;">
+        <div class="kpi-card">
+          <div class="row">
+            <div>
+              <div class="tag"><b>Nutrition</b> 今週スコア</div>
+              <div class="u-mt8"><strong style="font-size:26px;">B</strong> <span class="u-muted">/ 目標 A</span></div>
+            </div>
+            <div class="score B">B</div>
+          </div>
+          <div class="bar"><i style="width:72%"></i></div>
+          <div class="u-mt12 helper">野菜がやや不足。次の買い物で葉物を追加すると改善。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="u-mt16 grid cols-4">
+    <div class="kpi-card">
+      <div class="row">
+        <div>
+          <span>所持食材</span>
+          <div class="u-mt8"><strong>18</strong> <span class="u-muted">items</span></div>
+        </div>
+        <span class="dot green"></span>
+      </div>
+      <div class="bar"><i style="width:58%"></i></div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="row">
+        <div>
+          <span>消費期限間近</span>
+          <div class="u-mt8"><strong>3</strong> <span class="u-muted">alerts</span></div>
+        </div>
+        <span class="dot red"></span>
+      </div>
+      <div class="bar"><i style="width:32%"></i></div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="row">
+        <div>
+          <span>作れる候補</span>
+          <div class="u-mt8"><strong>12</strong> <span class="u-muted">recipes</span></div>
+        </div>
+        <span class="dot blue"></span>
+      </div>
+      <div class="bar"><i style="width:64%"></i></div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="row">
+        <div>
+          <span>今週タンパク質</span>
+          <div class="u-mt8"><strong>92</strong> <span class="u-muted">g/day</span></div>
+        </div>
+        <span class="dot violet"></span>
+      </div>
+      <div class="bar"><i style="width:76%"></i></div>
+    </div>
+  </div>
+
+  <div class="u-mt16 grid cols-2">
+    <div class="card">
+      <div class="card-h">
+        <h3>次におすすめ（時短）</h3>
+        <small>所持食材から</small>
+      </div>
+      <div class="card-b">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>料理</th>
+              <th>時間</th>
+              <th>難易度</th>
+              <th class="right">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>鶏むね肉の塩レモン</td>
+              <td class="muted">15分</td>
+              <td class="muted">★☆☆</td>
+              <td class="right"><a class="btn small" href="{{ url_for('recipe_detail', recipe_id=1) }}">詳細</a></td>
+            </tr>
+            <tr>
+              <td>卵と野菜のスープ</td>
+              <td class="muted">10分</td>
+              <td class="muted">★☆☆</td>
+              <td class="right"><a class="btn small" href="{{ url_for('recipe_detail', recipe_id=2) }}">詳細</a></td>
+            </tr>
+            <tr>
+              <td>ツナ豆腐ボウル</td>
+              <td class="muted">7分</td>
+              <td class="muted">★☆☆</td>
+              <td class="right"><a class="btn small" href="{{ url_for('recipe_detail', recipe_id=3) }}">詳細</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">
+        <h3>不足アラート</h3>
+        <small>改善提案</small>
+      </div>
+      <div class="card-b">
+        <div class="grid" style="gap:10px;">
+          <div class="kpi-card">
+            <div class="row">
+              <div>
+                <div class="tag"><b>Low</b> 野菜</div>
+                <div class="u-mt8 helper">葉物・きのこ・冷凍ブロッコリーを追加すると改善。</div>
+              </div>
+              <span class="dot amber"></span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="row">
+              <div>
+                <div class="tag"><b>Low</b> 食物繊維</div>
+                <div class="u-mt8 helper">オートミール / 玄米 / さつまいもが候補。</div>
+              </div>
+              <span class="dot violet"></span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="row">
+              <div>
+                <div class="tag"><b>OK</b> タンパク質</div>
+                <div class="u-mt8 helper">鶏胸肉・卵・豆腐で十分。脂質の管理だけ注意。</div>
+              </div>
+              <span class="dot green"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

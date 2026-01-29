@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% set title="AI認識 | AI Pantry OS" %}
+{% set active="recognize" %}
+{% set header_title="AI認識" %}
+{% set header_subtitle="写真アップロードで食材を自動抽出" %}
+
+{% block content %}
+  <div class="pagehead">
+    <div>
+      <h2>AI 食材認識</h2>
+      <p>冷蔵庫 / 食材写真をアップロードして、検出結果を所持食材に反映します。</p>
+    </div>
+    <div class="smallrow">
+      <span class="pill">Model: YOLOv8n</span>
+      <span class="pill">Latency: ~350ms</span>
+    </div>
+  </div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <div class="card-h">
+        <h3>アップロード</h3>
+        <small>jpg / png</small>
+      </div>
+      <div class="card-b">
+        <div class="drop">
+          <div>
+            <strong>ドラッグ＆ドロップ</strong>
+            <div class="meta">
+              冷蔵庫の中身・食材をできるだけ明るく撮影。<br/>
+              例：斜めより正面、反射を避ける。
+            </div>
+            <div class="u-mt12">
+              <form class="form" method="post" enctype="multipart/form-data" action="{{ url_for('recognize') }}">
+                <label>画像ファイル</label>
+                <input type="file" name="image" accept="image/*" required />
+                <div class="smallrow">
+                  <button class="btn primary" type="submit">解析開始</button>
+                  <button class="btn" type="button" onclick="demoFill()">デモ表示</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div style="width: 220px;">
+            <div class="tag"><b>TIP</b> ぶれ・暗さは精度低下</div>
+            <div class="u-mt12">
+              <div class="progress" title="upload"><i id="pbar" style="width:12%"></i></div>
+              <div class="helper u-mt8">progress: <span id="ptext">idle</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="grid cols-2">
+          <div class="kpi-card">
+            <div class="row">
+              <div>
+                <span>検出数</span>
+                <div class="u-mt8"><strong id="detCount">{{ items|length }}</strong> <span class="u-muted">items</span></div>
+              </div>
+              <span class="dot green"></span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="row">
+              <div>
+                <span>信頼度(平均)</span>
+                <div class="u-mt8"><strong id="detConf">—</strong> <span class="u-muted">avg</span></div>
+              </div>
+              <span class="dot cyan"></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">
+        <h3>検出結果（プレビュー）</h3>
+        <small>手動修正可</small>
+      </div>
+      <div class="card-b">
+        <table class="table" id="detTable">
+          <thead>
+            <tr>
+              <th>食材</th>
+              <th>数量</th>
+              <th>単位</th>
+              <th class="right">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+              <tr>
+                <td>
+                  <form id="rec-update-{{ loop.index0 }}" action="/recognize/update/{{ loop.index0 }}" method="post"></form>
+                  <input form="rec-update-{{ loop.index0 }}" name="name" value="{{ item.name }}" />
+                </td>
+                <td>
+                  <input form="rec-update-{{ loop.index0 }}" name="quantity" value="{{ item.quantity }}" style="width:84px; padding:8px 10px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.18)">
+                </td>
+                <td>
+                  <input form="rec-update-{{ loop.index0 }}" name="unit" value="{{ item.unit }}" style="width:84px; padding:8px 10px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.18)">
+                </td>
+                <td class="right">
+                  <button class="btn small" form="rec-update-{{ loop.index0 }}" type="submit">更新</button>
+                  <form action="/recognize/delete/{{ loop.index0 }}" method="post" style="display:inline;">
+                    <button class="btn small danger" type="submit">除外</button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td class="muted" colspan="4">まだ結果がありません。左でアップロードしてください。</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <div class="u-mt12 smallrow">
+          <a class="btn" href="{{ url_for('pantry') }}">所持食材へ</a>
+          <form action="/recognize/save" method="post">
+            <button class="btn primary" type="submit">所持食材に反映</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function setProgress(p){
+    const bar = document.getElementById('pbar');
+    const text = document.getElementById('ptext');
+    bar.style.width = p + '%';
+    text.textContent = p >= 100 ? 'done' : (p + '%');
+  }
+
+  function demoFill(){
+    const data = [
+      {name:'鶏むね肉', qty:1, unit:'枚'},
+      {name:'卵', qty:6, unit:'個'},
+      {name:'ブロッコリー', qty:1, unit:'株'},
+      {name:'牛乳', qty:1, unit:'本'}
+    ];
+    const tbody = document.querySelector('#detTable tbody');
+    tbody.innerHTML = data.map((r, i)=>`
+      <tr>
+        <td>${r.name}</td>
+        <td>${r.qty}</td>
+        <td>${r.unit}</td>
+        <td class="right"><span class="muted">demo</span></td>
+      </tr>
+    `).join('');
+    document.getElementById('detCount').textContent = data.length;
+    let p = 0;
+    const timer = setInterval(()=>{
+      p += 12;
+      setProgress(Math.min(p, 100));
+      if(p >= 100) clearInterval(timer);
+    }, 80);
+  }
+</script>
+{% endblock %}

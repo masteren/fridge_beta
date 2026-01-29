@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% set title="所持食材 | AI Pantry OS" %}
+{% set active="pantry" %}
+{% set header_title="所持食材" %}
+{% set header_subtitle="AI結果＋手動追加で在庫管理" %}
+
+{% block content %}
+  <div class="pagehead">
+    <div>
+      <h2>所持食材リスト</h2>
+      <p>食材の追加・削除・期限管理。AI認識結果をここに集約。</p>
+    </div>
+    <div class="smallrow">
+      <a class="btn" href="{{ url_for('recognize') }}">AI認識に戻る</a>
+      <button class="btn primary" type="button" onclick="openAdd()">＋ 手動追加</button>
+    </div>
+  </div>
+
+  <div class="grid cols-3">
+    <div class="kpi-card">
+      <div class="row">
+        <div><span>合計</span><div class="u-mt8"><strong>{{ items|length }}</strong> <span class="u-muted">items</span></div></div>
+        <span class="dot green"></span>
+      </div>
+      <div class="bar"><i style="width:58%"></i></div>
+    </div>
+    <div class="kpi-card">
+      <div class="row">
+        <div><span>期限間近</span><div class="u-mt8"><strong>3</strong> <span class="u-muted">alerts</span></div></div>
+        <span class="dot red"></span>
+      </div>
+      <div class="bar"><i style="width:32%"></i></div>
+    </div>
+    <div class="kpi-card">
+      <div class="row">
+        <div><span>不足カテゴリ</span><div class="u-mt8"><strong>野菜</strong> <span class="u-muted">low</span></div></div>
+        <span class="dot amber"></span>
+      </div>
+      <div class="bar"><i style="width:44%"></i></div>
+    </div>
+  </div>
+
+  <div class="u-mt16 card">
+    <div class="card-h">
+      <h3>在庫一覧</h3>
+      <small>検索・ソートは後で実装可</small>
+    </div>
+    <div class="card-b">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>食材</th>
+            <th>数量</th>
+            <th>単位</th>
+            <th class="right">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+            <tr>
+              <td>
+                <form id="pantry-update-{{ item.id }}" action="/pantry/update/{{ item.id }}" method="post"></form>
+                <input form="pantry-update-{{ item.id }}" name="name" value="{{ item.name }}" />
+              </td>
+              <td>
+                <input form="pantry-update-{{ item.id }}" name="quantity" value="{{ item.quantity }}" style="width:84px; padding:8px 10px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.18)">
+              </td>
+              <td>
+                <select form="pantry-update-{{ item.id }}" name="unit" style="width:110px; padding:8px 10px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.18)">
+                  {% for u in ['個','本','枚','袋','箱','g','kg','ml','L','缶'] %}
+                    <option value="{{ u }}" {% if item.unit == u %}selected{% endif %}>{{ u }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td class="right">
+                <button class="btn small" form="pantry-update-{{ item.id }}" type="submit">更新</button>
+                <a class="btn small danger" href="/pantry/delete/{{ item.id }}">削除</a>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td class="muted" colspan="4">まだ在庫がありません。</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="u-mt12 smallrow">
+        <a class="btn" href="{{ url_for('recipes') }}">この食材で作れるレシピ</a>
+        <a class="btn primary" href="{{ url_for('nutrition') }}">栄養スコアを見る</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="u-mt16 card soft" id="addBox" style="display:none;">
+    <div class="card-h">
+      <h3>手動追加</h3>
+      <small>UIデモ</small>
+    </div>
+    <div class="card-b">
+      <form class="form" method="post" action="{{ url_for('pantry_add') }}">
+        <label>食材名</label>
+        <select name="name" required>
+          <option value="" disabled selected>食材を選択</option>
+          <option>鶏むね肉</option>
+          <option>鶏もも肉</option>
+          <option>豚肉</option>
+          <option>牛肉</option>
+          <option>卵</option>
+          <option>豆腐</option>
+          <option>納豆</option>
+          <option>牛乳</option>
+          <option>ヨーグルト</option>
+          <option>チーズ</option>
+          <option>ご飯</option>
+          <option>パン</option>
+          <option>うどん</option>
+          <option>パスタ</option>
+          <option>ブロッコリー</option>
+          <option>ほうれん草</option>
+          <option>トマト</option>
+          <option>玉ねぎ</option>
+          <option>にんじん</option>
+          <option>じゃがいも</option>
+          <option>きのこ</option>
+          <option>キャベツ</option>
+        </select>
+        <label>数量</label>
+        <input name="quantity" placeholder="例：2" required />
+        <label>単位</label>
+        <select name="unit" required>
+          <option value="" disabled selected>単位を選択</option>
+          <option>個</option>
+          <option>本</option>
+          <option>枚</option>
+          <option>袋</option>
+          <option>箱</option>
+          <option>g</option>
+          <option>kg</option>
+          <option>ml</option>
+          <option>L</option>
+          <option>缶</option>
+        </select>
+        <div class="smallrow">
+          <button class="btn primary" type="submit">追加</button>
+          <button class="btn" type="button" onclick="closeAdd()">閉じる</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function openAdd(){
+    document.getElementById('addBox').style.display='block';
+    window.scrollTo({top: document.body.scrollHeight, behavior:'smooth'});
+  }
+  function closeAdd(){ document.getElementById('addBox').style.display='none'; }
+</script>
+{% endblock %}

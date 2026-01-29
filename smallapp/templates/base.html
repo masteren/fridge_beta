@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title or "AI食材認識・栄養最適化サポート" }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body class="page">
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <a class="brand" href="{{ url_for('home') }}" style="padding:8px 10px;">
+        <div class="logo"></div>
+        <div>
+          <h1>AI Pantry OS</h1>
+          <small>食材認識・栄養最適化</small>
+        </div>
+      </a>
+
+      <div class="side-section">
+        <div class="side-title">Core</div>
+        <nav class="nav">
+          <a href="{{ url_for('home') }}" class="{% if active=='home' %}active{% endif %}">
+            <span class="dot"></span> ホーム
+          </a>
+          {% if user %}
+            <a href="{{ url_for('recognize') }}" class="{% if active=='recognize' %}active{% endif %}">
+              <span class="dot violet"></span> AI認識
+            </a>
+            <a href="{{ url_for('pantry') }}" class="{% if active=='pantry' %}active{% endif %}">
+              <span class="dot green"></span> 所持食材
+            </a>
+            <a href="{{ url_for('recipes') }}" class="{% if active=='recipes' %}active{% endif %}">
+              <span class="dot blue"></span> レシピ提案
+            </a>
+            <a href="{{ url_for('nutrition') }}" class="{% if active=='nutrition' %}active{% endif %}">
+              <span class="dot amber"></span> 栄養スコア
+            </a>
+            <a href="{{ url_for('dashboard') }}" class="{% if active=='dashboard' %}active{% endif %}">
+              <span class="dot red"></span> ダッシュボード
+            </a>
+          {% else %}
+            <a href="{{ url_for('auth') }}">
+              <span class="dot violet"></span> AI認識
+            </a>
+            <a href="{{ url_for('auth') }}">
+              <span class="dot green"></span> 所持食材
+            </a>
+            <a href="{{ url_for('auth') }}">
+              <span class="dot blue"></span> レシピ提案
+            </a>
+            <a href="{{ url_for('auth') }}">
+              <span class="dot amber"></span> 栄養スコア
+            </a>
+            <a href="{{ url_for('auth') }}">
+              <span class="dot red"></span> ダッシュボード
+            </a>
+          {% endif %}
+        </nav>
+      </div>
+
+      <div class="side-section">
+        <div class="side-title">Status</div>
+        <div class="side-card">
+          <div class="kpi">
+            <strong>{{ stats_ingredients or 18 }}</strong>
+            <span>items in pantry</span>
+          </div>
+          <p>AI認識→自動追加→レシピ提案→栄養評価までを一気通貫。</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <header class="topbar">
+        <a class="brand" href="{{ url_for('home') }}" style="min-width: 210px;">
+          <div class="logo" style="width:34px;height:34px;border-radius:12px;"></div>
+          <div>
+            <h1 style="font-size:13px;">{{ header_title or "AI食材認識システム" }}</h1>
+            <small>{{ header_subtitle or "Fridge Photo → Ingredients → Recipes → Nutrition" }}</small>
+          </div>
+        </a>
+
+        <div class="search">
+          <div class="field">
+            <span style="opacity:.75;">⌕</span>
+            <input placeholder="食材・レシピを検索（例：鶏むね肉 / 卵 / 低脂質）" />
+            <span class="pill">⌘K</span>
+          </div>
+          <div class="pills">
+            <span class="pill dot">online</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="iconbtn" title="通知"><span>🔔</span><span class="badge" style="margin-left:-10px;">3</span></button>
+          {% if user %}
+            <a class="btn small" href="{{ url_for('logout') }}">ログアウト</a>
+          {% else %}
+            <a class="btn small" href="{{ url_for('auth') }}">ログイン</a>
+          {% endif %}
+        </div>
+      </header>
+
+      <div class="container" id="app">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>
