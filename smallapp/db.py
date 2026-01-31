@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
 import json
-import random
 import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+from recipes_data import INTERNATIONAL_RECIPES
 
 DB_PATH = Path(__file__).with_name("db.sqlite3")
 
@@ -154,31 +156,31 @@ def seed_data() -> None:
             )
 
         pantry_seed = [
-            # 急需补充（2-3天内过期）
-            ("鶏むね肉", 2, "枚", (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")),
-            ("ブロッコリー", 1, "株", (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")),
-            ("豆腐", 2, "丁", (datetime.now() + timedelta(days=4)).strftime("%Y-%m-%d")),
-            ("卵", 8, "個", (datetime.now() + timedelta(days=5)).strftime("%Y-%m-%d")),
-            ("牛乳", 1, "本", (datetime.now() + timedelta(days=6)).strftime("%Y-%m-%d")),
-            # 中期食材（7-15天）
-            ("ご飯", 3, "杯", (datetime.now() + timedelta(days=15)).strftime("%Y-%m-%d")),
-            ("トマト", 3, "個", (datetime.now() + timedelta(days=8)).strftime("%Y-%m-%d")),
-            ("玉ねぎ", 2, "個", (datetime.now() + timedelta(days=12)).strftime("%Y-%m-%d")),
-            ("じゃがいも", 5, "個", (datetime.now() + timedelta(days=20)).strftime("%Y-%m-%d")),
-            ("にんじん", 3, "本", (datetime.now() + timedelta(days=18)).strftime("%Y-%m-%d")),
+            # 易失商品 (1-3天内过期)
+            ("鸡蛋", 2, "个", (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")),
+            ("牛奶", 1, "盒", (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")),
+            ("豆腐", 2, "块", (datetime.now() + timedelta(days=4)).strftime("%Y-%m-%d")),
+            ("番茄", 8, "个", (datetime.now() + timedelta(days=5)).strftime("%Y-%m-%d")),
+            ("牛肉", 1, "斤", (datetime.now() + timedelta(days=6)).strftime("%Y-%m-%d")),
+            # 中期食材 (7-15天)
+            ("菠菜", 3, "把", (datetime.now() + timedelta(days=15)).strftime("%Y-%m-%d")),
+            ("胡萝卜", 3, "个", (datetime.now() + timedelta(days=8)).strftime("%Y-%m-%d")),
+            ("土豆", 2, "个", (datetime.now() + timedelta(days=12)).strftime("%Y-%m-%d")),
+            ("洋葱", 5, "个", (datetime.now() + timedelta(days=20)).strftime("%Y-%m-%d")),
+            ("葱", 3, "斤", (datetime.now() + timedelta(days=18)).strftime("%Y-%m-%d")),
             # 长期食材
-            ("塩", 1, "袋", (datetime.now() + timedelta(days=180)).strftime("%Y-%m-%d")),
-            ("油", 1, "本", (datetime.now() + timedelta(days=60)).strftime("%Y-%m-%d")),
-            ("醤油", 1, "本", (datetime.now() + timedelta(days=90)).strftime("%Y-%m-%d")),
+            ("盐", 1, "袋", (datetime.now() + timedelta(days=180)).strftime("%Y-%m-%d")),
+            ("油", 1, "斤", (datetime.now() + timedelta(days=60)).strftime("%Y-%m-%d")),
+            ("酱油", 1, "斤", (datetime.now() + timedelta(days=90)).strftime("%Y-%m-%d")),
             ("砂糖", 1, "袋", (datetime.now() + timedelta(days=120)).strftime("%Y-%m-%d")),
             ("小麦粉", 1, "袋", (datetime.now() + timedelta(days=100)).strftime("%Y-%m-%d")),
             # 冷冻食品
-            ("冷凍ブロッコリー", 2, "袋", (datetime.now() + timedelta(days=45)).strftime("%Y-%m-%d")),
-            ("冷凍餃子", 1, "箱", (datetime.now() + timedelta(days=40)).strftime("%Y-%m-%d")),
+            ("冷冻鸡腿", 2, "袋", (datetime.now() + timedelta(days=45)).strftime("%Y-%m-%d")),
+            ("冷冻饺子", 1, "盒", (datetime.now() + timedelta(days=40)).strftime("%Y-%m-%d")),
             # 饮料和其他
-            ("コーヒー豆", 1, "袋", (datetime.now() + timedelta(days=60)).strftime("%Y-%m-%d")),
-            ("ヨーグルト", 3, "個", (datetime.now() + timedelta(days=9)).strftime("%Y-%m-%d")),
-            ("チーズ", 1, "袋", (datetime.now() + timedelta(days=25)).strftime("%Y-%m-%d")),
+            ("番茄酱", 1, "袋", (datetime.now() + timedelta(days=60)).strftime("%Y-%m-%d")),
+            ("面条", 3, "个", (datetime.now() + timedelta(days=9)).strftime("%Y-%m-%d")),
+            ("大米", 1, "袋", (datetime.now() + timedelta(days=25)).strftime("%Y-%m-%d")),
         ]
         for name, qty, unit, expiry_date in pantry_seed:
             conn.execute(
@@ -191,120 +193,52 @@ def seed_data() -> None:
                 (demo_user_id, name, qty, unit, expiry_date),
             )
 
-        recipe_count = conn.execute("SELECT COUNT(*) as count FROM recipes").fetchone()["count"]
-        if recipe_count < 50:
-            random.seed(42)
-            base_ingredients = [
-                ("鶏むね肉", "枚", 120, 24, 3, 0),
-                ("鶏もも肉", "枚", 160, 20, 8, 0),
-                ("豚肉", "枚", 170, 18, 10, 0),
-                ("牛肉", "枚", 180, 19, 12, 0),
-                ("卵", "個", 70, 6, 5, 0),
-                ("豆腐", "丁", 80, 8, 4, 0),
-                ("納豆", "パック", 90, 8, 5, 0),
-                ("牛乳", "本", 110, 7, 6, 0),
-                ("ご飯", "杯", 240, 4, 0, 0),
-                ("パン", "枚", 120, 4, 2, 0),
-                ("トマト", "個", 20, 1, 0, 1),
-                ("玉ねぎ", "個", 35, 1, 0, 1),
-                ("ブロッコリー", "株", 30, 3, 0, 2),
-                ("ほうれん草", "束", 25, 3, 0, 2),
-                ("きのこ", "パック", 20, 2, 0, 1),
-                ("にんじん", "本", 30, 1, 0, 1),
-                ("じゃがいも", "個", 80, 2, 0, 0),
-                ("チーズ", "枚", 60, 4, 5, 0),
-                ("ツナ", "缶", 100, 13, 5, 0),
-                ("ヨーグルト", "個", 90, 5, 2, 0),
-            ]
-
-            styles = [
-                ("炒め", "さっと炒めて香ばしく仕上げます。"),
-                ("蒸し", "蒸してしっとり仕上げます。"),
-                ("スープ", "具材を煮込んだやさしい味。"),
-                ("丼", "ご飯にのせて満足感アップ。"),
-                ("サラダ", "さっぱり軽めの一品。"),
-            ]
-
-            recipes = []
-            for idx in range(50):
-                style, desc = styles[idx % len(styles)]
-                pick = random.sample(base_ingredients, 3 + (idx % 3))
-                title_main = pick[0][0]
-                title = f"{title_main}の{style}"
-                ingredients = []
-                kcal = protein = fat = veg_score = 0
-                for ing in pick:
-                    name, unit, k, p, f, v = ing
-                    qty = 1
-                    ingredients.append({"name": name, "quantity": qty, "unit": unit})
-                    kcal += k
-                    protein += p
-                    fat += f
-                    veg_score += v
-
-                steps = [
-                    f"{pick[0][0]}を下準備する",
-                    f"{'と'.join([i[0] for i in pick[1:3]])}を加えて{style}にする",
-                    "味を整えて完成",
-                ]
-                nutrition = {
-                    "kcal": kcal,
-                    "protein": protein,
-                    "fat": fat,
-                    "carb": max(0, kcal // 8),
-                    "salt": round(1.0 + (idx % 3) * 0.2, 1),
-                    "veg_score": veg_score,
-                }
-                recipes.append(
-                    {
-                        "title": title,
-                        "description": desc,
-                        "steps": steps,
-                        "ingredients": ingredients,
-                        "nutrition": nutrition,
-                    }
-                )
-
-            for recipe in recipes:
+        def _insert_recipe(conn, recipe):
+            existing = conn.execute(
+                "SELECT id FROM recipes WHERE title = ?",
+                (recipe["title"],),
+            ).fetchone()
+            if existing:
+                return
+            cursor = conn.execute(
+                """
+                INSERT INTO recipes
+                    (title, description, steps_json, ingredients_json, nutrition_json)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    recipe["title"],
+                    recipe["description"],
+                    json.dumps(recipe["steps"], ensure_ascii=False),
+                    json.dumps(recipe["ingredients"], ensure_ascii=False),
+                    json.dumps(recipe["nutrition"], ensure_ascii=False),
+                ),
+            )
+            recipe_id = cursor.lastrowid
+            for idx, ing in enumerate(recipe["ingredients"]):
+                ing_name = str(ing.get("name", "")).strip()
+                if not ing_name:
+                    continue
+                ing_id = _get_or_create_ingredient_id(conn, ing_name)
+                role = "required" if idx < 2 else "optional"
                 conn.execute(
                     """
-                    INSERT INTO recipes
-                        (title, description, steps_json, ingredients_json, nutrition_json)
+                    INSERT OR IGNORE INTO recipe_ingredients
+                        (recipe_id, ingredient_id, amount, unit, role)
                     VALUES (?, ?, ?, ?, ?)
                     """,
                     (
-                        recipe["title"],
-                        recipe["description"],
-                        json.dumps(recipe["steps"], ensure_ascii=False),
-                        json.dumps(recipe["ingredients"], ensure_ascii=False),
-                        json.dumps(recipe["nutrition"], ensure_ascii=False),
+                        recipe_id,
+                        ing_id,
+                        ing.get("quantity"),
+                        ing.get("unit"),
+                        role,
                     ),
                 )
 
-            recipe_rows = conn.execute("SELECT id, ingredients_json FROM recipes").fetchall()
-            for row in recipe_rows:
-                recipe_id = row["id"]
-                ingredient_list = json.loads(row["ingredients_json"])
-                for idx, ing in enumerate(ingredient_list):
-                    ing_name = str(ing.get("name", "")).strip()
-                    if not ing_name:
-                        continue
-                    ing_id = _get_or_create_ingredient_id(conn, ing_name)
-                    role = "required" if idx < 2 else "optional"
-                    conn.execute(
-                        """
-                        INSERT OR IGNORE INTO recipe_ingredients
-                            (recipe_id, ingredient_id, amount, unit, role)
-                        VALUES (?, ?, ?, ?, ?)
-                        """,
-                        (
-                            recipe_id,
-                            ing_id,
-                            ing.get("quantity"),
-                            ing.get("unit"),
-                            role,
-                        ),
-                    )
+        global_recipes = INTERNATIONAL_RECIPES
+        for recipe in global_recipes:
+            _insert_recipe(conn, recipe)
 
         # Add cooking history (demonstration data)
         cooking_history = [
@@ -353,6 +287,8 @@ def _get_or_create_ingredient_id(conn: sqlite3.Connection, name: str) -> int:
         (name,),
     )
     return cursor.lastrowid
+
+
 
 
 def fetch_recipes_with_ingredients() -> List[Dict[str, Any]]:
@@ -587,6 +523,7 @@ def fetch_cooking_log_count(user_id: int) -> int:
             (user_id,),
         ).fetchone()
     return result["count"] if result else 0
+
 
 def search_recipes(keyword: str) -> List[Dict[str, Any]]:
     """Search recipes by title or description."""
