@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% set title="通知 | AI Pantry OS" %}
+{% set active="notifications" %}
+{% set header_title="通知" %}
+{% set header_subtitle="期限間近の食材をチェック" %}
+
+{% block content %}
+  <div class="pagehead">
+    <div>
+      <h2>期限アラート</h2>
+      <p>7日以内に期限切れ予定の食材を表示します。</p>
+    </div>
+    <div class="smallrow">
+      <a class="btn" href="{{ url_for('pantry') }}">所持食材に戻る</a>
+    </div>
+  </div>
+
+  {% if alerts %}
+    <div class="grid cols-3">
+      {% for alert in alerts %}
+        <div class="card" style="border-left: 4px solid rgba(255,107,107,.45);">
+          <div style="padding: 16px; min-height: 120px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <h3 style="margin: 0 0 8px 0; font-size: 18px; color: #333;">{{ alert['name'] or '名称未設定' }}</h3>
+              <p style="margin: 0 0 12px 0; color: #666; font-size: 14px;">
+                <strong>数量:</strong> {{ alert['quantity'] }} {{ alert['unit'] }}
+              </p>
+              <p style="margin: 0; padding: 8px 12px; background-color: #fff3cd; border-radius: 4px; color: #856404; font-size: 14px; font-weight: bold;">
+                期限: <span style="color: #d63031;">{{ alert['expiry_date'] }}</span>
+              </p>
+            </div>
+            <div style="margin-top: 12px;">
+              <a class="btn small" href="{{ url_for('pantry') }}" style="text-decoration: none; font-size: 12px;">編集</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 60px 20px; background-color: #f8f9fa; border-radius: 8px; margin-top: 30px;">
+      <p style="font-size: 48px; margin: 0;">✨</p>
+      <h3 style="margin: 16px 0 8px 0; color: #333;">ありません</h3>
+      <p style="margin: 0; color: #666;">期限間近の食材はありません。安心です！</p>
+    </div>
+  {% endif %}
+
+  <style>
+    .card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn.small {
+      padding: 6px 12px;
+      font-size: 12px;
+      border: 1px solid #ddd;
+      background: #f8f9fa;
+      color: #333;
+      text-decoration: none;
+      border-radius: 4px;
+      display: inline-block;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn.small:hover {
+      background: #e9ecef;
+      border-color: #adb5bd;
+    }
+  </style>
+{% endblock %}

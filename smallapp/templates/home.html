@@ -14,7 +14,8 @@
           作れる料理提案 → 栄養スコア（A–D）と1週間傾向を可視化。
         </p>
         <div class="cta">
-          <a class="btn primary" href="{{ url_for('recognize') }}">AI認識を開始</a>
+          <a class="btn primary" href="{{ url_for('vision') }}?demo=1">デモ開始（30秒）</a>
+          <a class="btn" href="{{ url_for('recognize') }}">AI認識を開始</a>
           <a class="btn" href="{{ url_for('pantry') }}">所持食材を見る</a>
           <a class="btn" href="{{ url_for('recipes') }}">レシピ提案へ</a>
         </div>
@@ -23,7 +24,7 @@
         <div class="kpi-card">
           <div class="row">
             <div>
-              <div class="tag"><b>Nutrition</b> 今週スコア</div>
+              <div class="tag"><b>栄養</b> 今週スコア</div>
               <div class="u-mt8"><strong style="font-size:26px;">B</strong> <span class="u-muted">/ 目標 A</span></div>
             </div>
             <div class="score B">B</div>
@@ -40,44 +41,44 @@
       <div class="row">
         <div>
           <span>所持食材</span>
-          <div class="u-mt8"><strong>18</strong> <span class="u-muted">items</span></div>
+          <div class="u-mt8"><strong>{{ pantry_count or 0 }}</strong> <span class="u-muted">件</span></div>
         </div>
         <span class="dot green"></span>
       </div>
-      <div class="bar"><i style="width:58%"></i></div>
+      <div class="bar"><i style="width:{{ (pantry_count | default(0)) * 3 }}%"></i></div>
     </div>
 
     <div class="kpi-card">
       <div class="row">
         <div>
           <span>消費期限間近</span>
-          <div class="u-mt8"><strong>3</strong> <span class="u-muted">alerts</span></div>
+          <div class="u-mt8"><strong>{{ expiry_alert_count or 0 }}</strong> <span class="u-muted">件</span></div>
         </div>
         <span class="dot red"></span>
       </div>
-      <div class="bar"><i style="width:32%"></i></div>
+      <div class="bar"><i style="width:{{ (expiry_alert_count | default(0)) * 20 }}%"></i></div>
     </div>
 
     <div class="kpi-card">
       <div class="row">
         <div>
           <span>作れる候補</span>
-          <div class="u-mt8"><strong>12</strong> <span class="u-muted">recipes</span></div>
+          <div class="u-mt8"><strong>{{ recipe_count or 0 }}</strong> <span class="u-muted">recipes</span></div>
         </div>
         <span class="dot blue"></span>
       </div>
-      <div class="bar"><i style="width:64%"></i></div>
+      <div class="bar"><i style="width:{{ (recipe_count | default(0)) * 10 }}%"></i></div>
     </div>
 
     <div class="kpi-card">
       <div class="row">
         <div>
           <span>今週タンパク質</span>
-          <div class="u-mt8"><strong>92</strong> <span class="u-muted">g/day</span></div>
+          <div class="u-mt8"><strong>{{ avg_protein or 0 }}</strong> <span class="u-muted">g/day</span></div>
         </div>
         <span class="dot violet"></span>
       </div>
-      <div class="bar"><i style="width:76%"></i></div>
+      <div class="bar"><i style="width:{{ (avg_protein | default(0)) / 50 * 100 }}%"></i></div>
     </div>
   </div>
 
@@ -131,7 +132,7 @@
           <div class="kpi-card">
             <div class="row">
               <div>
-                <div class="tag"><b>Low</b> 野菜</div>
+                <div class="tag"><b>不足</b> 野菜</div>
                 <div class="u-mt8 helper">葉物・きのこ・冷凍ブロッコリーを追加すると改善。</div>
               </div>
               <span class="dot amber"></span>
@@ -140,7 +141,7 @@
           <div class="kpi-card">
             <div class="row">
               <div>
-                <div class="tag"><b>Low</b> 食物繊維</div>
+                <div class="tag"><b>不足</b> 食物繊維</div>
                 <div class="u-mt8 helper">オートミール / 玄米 / さつまいもが候補。</div>
               </div>
               <span class="dot violet"></span>
@@ -149,7 +150,7 @@
           <div class="kpi-card">
             <div class="row">
               <div>
-                <div class="tag"><b>OK</b> タンパク質</div>
+                <div class="tag"><b>良好</b> タンパク質</div>
                 <div class="u-mt8 helper">鶏胸肉・卵・豆腐で十分。脂質の管理だけ注意。</div>
               </div>
               <span class="dot green"></span>

@@ -19,24 +19,24 @@
   <div class="grid cols-3">
     <div class="kpi-card">
       <div class="row">
-        <div><span>合計</span><div class="u-mt8"><strong>{{ items|length }}</strong> <span class="u-muted">items</span></div></div>
+        <div><span>合計</span><div class="u-mt8"><strong>{{ items|length }}</strong> <span class="u-muted">件</span></div></div>
         <span class="dot green"></span>
       </div>
-      <div class="bar"><i style="width:58%"></i></div>
+      <div class="bar"><i style="width:{{ (items|length * 10) % 100 }}%"></i></div>
     </div>
     <div class="kpi-card">
       <div class="row">
-        <div><span>期限間近</span><div class="u-mt8"><strong>3</strong> <span class="u-muted">alerts</span></div></div>
+        <div><span>期限間近</span><div class="u-mt8"><strong>{{ expiry_alert_count }}</strong> <span class="u-muted">件</span></div></div>
         <span class="dot red"></span>
       </div>
-      <div class="bar"><i style="width:32%"></i></div>
+      <div class="bar"><i style="width:{{ (expiry_alert_count * 20) % 100 }}%"></i></div>
     </div>
     <div class="kpi-card">
       <div class="row">
-        <div><span>不足カテゴリ</span><div class="u-mt8"><strong>野菜</strong> <span class="u-muted">low</span></div></div>
+        <div><span>追跡中</span><div class="u-mt8"><strong>{{ items|length }}</strong> <span class="u-muted">件</span></div></div>
         <span class="dot amber"></span>
       </div>
-      <div class="bar"><i style="width:44%"></i></div>
+      <div class="bar"><i style="width:{{ (items|length * 8) % 100 }}%"></i></div>
     </div>
   </div>
 
@@ -52,6 +52,7 @@
             <th>食材</th>
             <th>数量</th>
             <th>単位</th>
+            <th>期限</th>
             <th class="right">操作</th>
           </tr>
         </thead>
@@ -72,6 +73,15 @@
                   {% endfor %}
                 </select>
               </td>
+              <td>
+                <input
+                  form="pantry-update-{{ item.id }}"
+                  type="date"
+                  name="expiry_date"
+                  value="{{ item.expiry_date or '' }}"
+                  style="width:150px; padding:8px 10px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.18)"
+                >
+              </td>
               <td class="right">
                 <button class="btn small" form="pantry-update-{{ item.id }}" type="submit">更新</button>
                 <a class="btn small danger" href="/pantry/delete/{{ item.id }}">削除</a>
@@ -79,7 +89,7 @@
             </tr>
           {% else %}
             <tr>
-              <td class="muted" colspan="4">まだ在庫がありません。</td>
+              <td class="muted" colspan="5">まだ在庫がありません。</td>
             </tr>
           {% endfor %}
         </tbody>
@@ -141,6 +151,8 @@
           <option>L</option>
           <option>缶</option>
         </select>
+        <label>期限</label>
+        <input type="date" name="expiry_date" />
         <div class="smallrow">
           <button class="btn primary" type="submit">追加</button>
           <button class="btn" type="button" onclick="closeAdd()">閉じる</button>

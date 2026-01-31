@@ -11,8 +11,8 @@
       <p>冷蔵庫 / 食材写真をアップロードして、検出結果を所持食材に反映します。</p>
     </div>
     <div class="smallrow">
-      <span class="pill">Model: YOLOv8n</span>
-      <span class="pill">Latency: ~350ms</span>
+      <span class="pill">モデル: gpt-4.1-mini</span>
+      <span class="pill">レイテンシ: API依存</span>
     </div>
   </div>
 
@@ -42,10 +42,10 @@
             </div>
           </div>
           <div style="width: 220px;">
-            <div class="tag"><b>TIP</b> ぶれ・暗さは精度低下</div>
+            <div class="tag"><b>ヒント</b> ぶれ・暗さは精度低下</div>
             <div class="u-mt12">
               <div class="progress" title="upload"><i id="pbar" style="width:12%"></i></div>
-              <div class="helper u-mt8">progress: <span id="ptext">idle</span></div>
+              <div class="helper u-mt8">進捗: <span id="ptext">待機中</span></div>
             </div>
           </div>
         </div>
@@ -57,7 +57,7 @@
             <div class="row">
               <div>
                 <span>検出数</span>
-                <div class="u-mt8"><strong id="detCount">{{ items|length }}</strong> <span class="u-muted">items</span></div>
+                <div class="u-mt8"><strong id="detCount">{{ items|length }}</strong> <span class="u-muted">件</span></div>
               </div>
               <span class="dot green"></span>
             </div>
@@ -136,7 +136,7 @@
     const bar = document.getElementById('pbar');
     const text = document.getElementById('ptext');
     bar.style.width = p + '%';
-    text.textContent = p >= 100 ? 'done' : (p + '%');
+    text.textContent = p >= 100 ? '完了' : (p + '%');
   }
 
   function demoFill(){
@@ -152,7 +152,7 @@
         <td>${r.name}</td>
         <td>${r.qty}</td>
         <td>${r.unit}</td>
-        <td class="right"><span class="muted">demo</span></td>
+        <td class="right"><span class="muted">デモ</span></td>
       </tr>
     `).join('');
     document.getElementById('detCount').textContent = data.length;

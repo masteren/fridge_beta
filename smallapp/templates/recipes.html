@@ -11,8 +11,8 @@
       <p>不足栄養（野菜/食物繊維など）を補う優先度で並び替え可能。</p>
     </div>
     <div class="smallrow">
-      <span class="pill">Filter: 時短</span>
-      <span class="pill">Goal: 低脂質</span>
+      <span class="pill">フィルター: 時短</span>
+      <span class="pill">目的: 低脂質</span>
       <a class="btn" href="{{ url_for('pantry') }}">所持食材へ</a>
     </div>
   </div>
@@ -33,7 +33,7 @@
         </div>
         <div class="card-b">
           <div class="smallrow">
-            <span class="tag"><b>Time</b> {{ r.time if r.time is defined else '10分' }}</span>
+            <span class="tag"><b>時間</b> {{ r.time if r.time is defined else '10分' }}</span>
             <span class="tag"><b>Lv</b> {{ r.lvl if r.lvl is defined else '★☆☆' }}</span>
           </div>
           <div class="u-mt12" style="display:flex; gap:8px; flex-wrap:wrap;">

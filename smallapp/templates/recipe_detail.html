@@ -32,24 +32,24 @@
         <div class="grid cols-2">
           <div class="kpi-card">
             <div class="row">
-              <div><span>一致率</span><div class="u-mt8"><strong>86%</strong></div></div>
+              <div><span>一致率</span><div class="u-mt8"><strong>{{ match_rate }}%</strong></div></div>
               <span class="dot green"></span>
             </div>
-            <div class="bar"><i style="width:86%"></i></div>
+            <div class="bar"><i style="width:{{ match_rate }}%"></i></div>
           </div>
           <div class="kpi-card">
             <div class="row">
-              <div><span>栄養スコア</span><div class="u-mt8"><strong>B</strong> <span class="u-muted">（改善見込み）</span></div></div>
-              <div class="score B">B</div>
+              <div><span>栄養スコア</span><div class="u-mt8"><strong>{{ nutrition.kcal if nutrition else 420 }}</strong> <span class="u-muted">kcal</span></div></div>
+              <div class="score" style="color: #4CAF50;">{{ (nutrition.protein if nutrition else 48) }}g</div>
             </div>
-            <div class="bar"><i style="width:72%"></i></div>
+            <div class="bar"><i style="width:{{ ((nutrition.protein if nutrition else 48) / 50 * 100) % 100 }}%"></i></div>
           </div>
         </div>
 
         <div class="u-mt12 smallrow">
-          <span class="tag"><b>Time</b> 10分</span>
-          <span class="tag"><b>Lv</b> ★☆☆</span>
-          <span class="tag"><b>Goal</b> 低脂質</span>
+          <span class="tag"><b>Match</b> {{ matched_count }}/{{ total_ingredients }}</span>
+          <span class="tag"><b>Protein</b> {{ nutrition.protein if nutrition else 48 }}g</span>
+          <span class="tag"><b>Veg</b> {{ nutrition.veg_score if nutrition else 2 }}</span>
         </div>
 
         <div class="hr"></div>
@@ -59,7 +59,7 @@
           <div class="kpi-card">
             <div class="row">
               <div>
-                <div class="tag"><b>Improve</b> 野菜</div>
+                <div class="tag"><b>改善</b> 野菜</div>
                 <div class="u-mt8 helper">葉物を追加すると A 評価に到達しやすい。</div>
               </div>
               <span class="dot amber"></span>
@@ -68,7 +68,7 @@
           <div class="kpi-card">
             <div class="row">
               <div>
-                <div class="tag"><b>Keep</b> タンパク質</div>
+                <div class="tag"><b>維持</b> タンパク質</div>
                 <div class="u-mt8 helper">卵 + 鶏胸肉で十分。脂質は控えめに。</div>
               </div>
               <span class="dot green"></span>

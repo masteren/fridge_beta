@@ -1,0 +1,414 @@
+{% extends "base.html" %}
+{% set title="AI認識(API) | AI Pantry OS" %}
+{% set active="vision" %}
+{% set header_title="AI認識(API)" %}
+{% set header_subtitle="画像アップロード → 食材JSON取得" %}
+{% set demo_labels = {'fridge':'冷蔵庫','cart':'買い物','table':'テーブル'} %}
+
+{% block content %}
+  <div class="pagehead">
+    <div>
+      <h2>AI 食材認識（クラウド）</h2>
+      <p>画像をアップロードして、食材リストを取得します（API経由）。</p>
+    </div>
+    <div class="smallrow">
+      <a class="btn" href="{{ url_for('recognize') }}">既存の認識ページ</a>
+    </div>
+  </div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <div class="card-h">
+        <h3>アップロード</h3>
+        <small>jpg / png</small>
+      </div>
+      <div class="card-b">
+        <div class="form">
+          <label>画像ファイル</label>
+          <div class="demo-filename" id="fileNameText">選択なし</div>
+          <input type="file" id="imageInput" accept="image/*" />
+          <div id="previewWrap" class="demo-preview u-mt8" style="display:none;">
+            <img id="previewImage" alt="選択画像プレビュー" />
+          </div>
+          <div class="smallrow">
+            <button class="btn primary" type="button" onclick="runVision()">解析開始</button>
+            <button class="btn btn-ghost" type="button" onclick="clearResult()">クリア</button>
+            <button class="btn btn-accent" type="button" onclick="openSamplePanel()">サンプル画像から選ぶ</button>
+          </div>
+        </div>
+        <div class="helper u-mt12" id="statusRow">
+          <span id="statusText">待機中</span>
+          <span id="cacheBadge" class="demo-badge demo-badge-hidden">Live</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">
+        <h3>検出結果</h3>
+        <small>手動編集して保存可能</small>
+      </div>
+      <div class="card-b">
+        <table class="table" id="resultTable">
+          <thead>
+            <tr>
+              <th>食材</th>
+              <th>数量</th>
+              <th>単位</th>
+              <th>信頼度</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="muted" colspan="4">まだ結果がありません。</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="u-mt12 smallrow">
+          <button class="btn primary" type="button" onclick="saveToPantry()">所持食材に反映</button>
+          <span class="helper" id="saveStatus"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="demoPanel" class="demo-panel" aria-hidden="true">
+    <div class="demo-panel-backdrop" onclick="closeSamplePanel()"></div>
+    <div class="demo-panel-body">
+      <div class="demo-panel-head">
+        <div>
+          <h3>サンプル画像</h3>
+          <p class="helper u-mb0">サンプル画像を選ぶと自動で認識します。</p>
+        </div>
+        <button class="iconbtn" type="button" onclick="closeSamplePanel()">✕</button>
+      </div>
+      <div class="demo-view-toggle">
+        <button class="demo-view-btn is-active" type="button" data-view="featured">おすすめ</button>
+        <button class="demo-view-btn" type="button" data-view="all">すべて</button>
+      </div>
+      <div class="demo-tabs">
+        {% for group in demo_catalog %}
+          <button class="demo-tab {% if loop.first %}is-active{% endif %}" type="button" data-tab="{{ group.key }}">
+            {{ demo_labels[group.key] }}
+          </button>
+        {% endfor %}
+      </div>
+      <div class="demo-tab-panels">
+        {% for group in demo_catalog %}
+          <div class="demo-tab-panel {% if loop.first %}is-active{% endif %}" data-panel="{{ group.key }}">
+            {% if group.images %}
+              <div class="demo-grid">
+                {% for image_url in group.images %}
+                  <button class="demo-thumb" type="button" data-index="{{ loop.index0 }}" onclick="openConfirm('{{ image_url }}','{{ group.key }}', {{ loop.index0 }})">
+                    <img src="{{ image_url }}" alt="{{ demo_labels[group.key] }}" loading="lazy" />
+                    <span class="demo-thumb-label">{{ demo_labels[group.key] }}</span>
+                  </button>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="helper">サンプル画像が見つかりません。</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+      <div class="demo-panel-foot">
+        <span class="helper">画像をクリックすると確認画面が開きます。</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirmModal" class="demo-confirm" aria-hidden="true">
+    <div class="demo-confirm-backdrop" onclick="closeConfirm()"></div>
+    <div class="demo-confirm-body">
+      <div class="demo-confirm-head">
+        <strong>確認</strong>
+        <button class="iconbtn" type="button" onclick="closeConfirm()">✕</button>
+      </div>
+      <div class="demo-confirm-preview">
+        <img id="confirmImage" alt="選択画像プレビュー" />
+      </div>
+      <div class="demo-confirm-foot">
+        <button class="btn primary" type="button" onclick="confirmSample()">この画像で認識する</button>
+        <button class="btn btn-ghost" type="button" onclick="closeConfirm()">キャンセル</button>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const statusText = document.getElementById('statusText');
+  const cacheBadge = document.getElementById('cacheBadge');
+  const previewWrap = document.getElementById('previewWrap');
+  const previewImage = document.getElementById('previewImage');
+  const imageInput = document.getElementById('imageInput');
+  const fileNameText = document.getElementById('fileNameText');
+  const confirmModal = document.getElementById('confirmModal');
+  const confirmImage = document.getElementById('confirmImage');
+  let selectedFile = null;
+
+  function setPreview(file){
+    if(!file){
+      previewWrap.style.display = 'none';
+      previewImage.removeAttribute('src');
+      fileNameText.textContent = '選択なし';
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    previewImage.onload = () => URL.revokeObjectURL(url);
+    previewImage.src = url;
+    previewWrap.style.display = 'block';
+    fileNameText.textContent = file.name || '選択済み';
+  }
+
+  function setCacheBadge(status){
+    if(!cacheBadge){
+      return;
+    }
+    if(!status){
+      cacheBadge.classList.add('demo-badge-hidden');
+      cacheBadge.textContent = '';
+      cacheBadge.classList.remove('demo-badge-live', 'demo-badge-cached');
+      return;
+    }
+    cacheBadge.textContent = status;
+    cacheBadge.classList.remove('demo-badge-hidden');
+    cacheBadge.classList.toggle('demo-badge-live', status === 'Live');
+    cacheBadge.classList.toggle('demo-badge-cached', status === 'Cached');
+  }
+
+  async function sendToVision(file, options = {}){
+    const isDemo = options.isDemo === true;
+    statusText.textContent = isDemo ? 'サンプル解析中...' : '解析中...';
+    setCacheBadge(null);
+    const formData = new FormData();
+    formData.append('image', file);
+    try{
+      const res = await fetch('/api/vision/ingredients', {
+        method: 'POST',
+        body: formData,
+        headers: isDemo ? {'X-Demo-Image': '1'} : {}
+      });
+      const data = await res.json();
+      const cacheStatus = res.headers.get('X-Cache-Status');
+      const isFallback = res.headers.get('X-Cache-Fallback') === '1';
+      setCacheBadge(cacheStatus);
+      if(!res.ok){
+        statusText.textContent = data.error ? `エラー: ${data.error}` : 'エラーが発生しました。';
+        renderRows([]);
+        return;
+      }
+      if(isFallback){
+        statusText.textContent = 'Live 失敗のため Cached 結果を表示しました。';
+      }else{
+        statusText.textContent = `取得完了: ${data.ingredients.length} 件`;
+      }
+      renderRows(data.ingredients);
+    }catch(e){
+      statusText.textContent = '通信エラーが発生しました。';
+      setCacheBadge(null);
+      renderRows([]);
+    }
+  }
+
+  async function runVision(){
+    const file = selectedFile || (imageInput.files && imageInput.files[0]);
+    if(!file){
+      statusText.textContent = '画像を選択してください。';
+      return;
+    }
+    await sendToVision(file);
+  }
+
+  function openConfirm(imageUrl, category, index){
+    confirmImage.src = imageUrl;
+    confirmImage.dataset.url = imageUrl;
+    if(category){
+      confirmImage.dataset.category = category;
+    }
+    if(typeof index === 'number'){
+      confirmImage.dataset.index = String(index);
+    }
+    confirmModal.classList.add('open');
+    confirmModal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeConfirm(){
+    confirmModal.classList.remove('open');
+    confirmModal.setAttribute('aria-hidden', 'true');
+    confirmImage.removeAttribute('src');
+    delete confirmImage.dataset.url;
+  }
+
+  async function confirmSample(){
+    const imageUrl = confirmImage.dataset.url;
+    if(!imageUrl){
+      return;
+    }
+    try{
+      const res = await fetch(imageUrl);
+      if(!res.ok){
+        statusText.textContent = 'サンプル画像の取得に失敗しました。';
+        return;
+      }
+      const blob = await res.blob();
+      const rawName = (imageUrl.split('/').pop() || '').split('?')[0];
+      const decodedName = rawName ? decodeURIComponent(rawName) : '';
+      const category = confirmImage.dataset.category || 'sample';
+      const index = Number(confirmImage.dataset.index || 0) + 1;
+      const padded = String(index).padStart(2, '0');
+      const baseName = decodedName && !decodedName.includes('%') ? decodedName : `demo_${category}_${padded}.jpg`;
+      const file = new File([blob], baseName, {type: blob.type || 'image/jpeg'});
+      selectedFile = file;
+      setPreview(file);
+      closeConfirm();
+      closeSamplePanel();
+      statusText.textContent = 'サンプルを選択しました。解析開始を押してください。';
+    }catch(e){
+      statusText.textContent = 'サンプル画像の取得に失敗しました。';
+    }
+  }
+
+  function renderRows(items){
+    const tbody = document.querySelector('#resultTable tbody');
+    if(!items || items.length === 0){
+      tbody.innerHTML = '<tr><td class="muted" colspan="4">まだ結果がありません。</td></tr>';
+      return;
+    }
+    tbody.innerHTML = items.map(item => {
+      const qty = item.quantity !== undefined ? item.quantity : '-';
+      const conf = item.confidence !== undefined ? item.confidence : '-';
+      const unit = item.unit !== undefined ? item.unit : '個';
+      return `
+        <tr>
+          <td><input value="${item.name}" data-field="name" /></td>
+          <td><input value="${qty}" data-field="quantity" style="width:84px" /></td>
+          <td><input value="${unit}" data-field="unit" style="width:84px" /></td>
+          <td>${conf}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function clearResult(){
+    imageInput.value = '';
+    selectedFile = null;
+    setPreview(null);
+    statusText.textContent = '待機中';
+    setCacheBadge(null);
+    renderRows([]);
+    document.getElementById('saveStatus').textContent = '';
+  }
+
+  function openSamplePanel(){
+    const panel = document.getElementById('demoPanel');
+    if(!panel){
+      return;
+    }
+    panel.classList.add('open');
+    panel.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSamplePanel(){
+    const panel = document.getElementById('demoPanel');
+    if(!panel){
+      return;
+    }
+    panel.classList.remove('open');
+    panel.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  function setupDemoTabs(){
+    const tabs = Array.from(document.querySelectorAll('.demo-tab'));
+    const panels = Array.from(document.querySelectorAll('.demo-tab-panel'));
+    if(tabs.length === 0){
+      return;
+    }
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.getAttribute('data-tab');
+        tabs.forEach(btn => btn.classList.toggle('is-active', btn === tab));
+        panels.forEach(panel => {
+          panel.classList.toggle('is-active', panel.getAttribute('data-panel') === target);
+        });
+      });
+    });
+  }
+
+  function setupDemoViews(){
+    const buttons = Array.from(document.querySelectorAll('.demo-view-btn'));
+    const thumbs = Array.from(document.querySelectorAll('.demo-thumb'));
+    const applyView = (view) => {
+      buttons.forEach(btn => btn.classList.toggle('is-active', btn.dataset.view === view));
+      thumbs.forEach(thumb => {
+        const index = Number(thumb.dataset.index || 0);
+        if(view === 'featured' && index >= 4){
+          thumb.classList.add('is-hidden');
+        }else{
+          thumb.classList.remove('is-hidden');
+        }
+      });
+    };
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        applyView(btn.dataset.view);
+      });
+    });
+    applyView('featured');
+  }
+
+  async function saveToPantry(){
+    const rows = Array.from(document.querySelectorAll('#resultTable tbody tr'));
+    const items = [];
+    rows.forEach(row => {
+      const nameInput = row.querySelector('[data-field="name"]');
+      if(!nameInput){ return; }
+      const quantityInput = row.querySelector('[data-field="quantity"]');
+      const unitInput = row.querySelector('[data-field="unit"]');
+      const name = nameInput.value.trim();
+      if(!name){ return; }
+      const quantity = quantityInput ? quantityInput.value : 1;
+      const unit = unitInput ? unitInput.value : '個';
+      items.push({name, quantity, unit});
+    });
+    const status = document.getElementById('saveStatus');
+    if(items.length === 0){
+      status.textContent = '保存できる項目がありません。';
+      return;
+    }
+    status.textContent = '保存中...';
+    try{
+      const res = await fetch('/api/vision/save', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ingredients: items})
+      });
+      const data = await res.json();
+      if(!res.ok){
+        status.textContent = data.error ? `エラー: ${data.error}` : '保存に失敗しました。';
+        return;
+      }
+      status.textContent = `保存完了: ${data.saved} 件`;
+    }catch(e){
+      status.textContent = '通信エラーが発生しました。';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    setupDemoTabs();
+    setupDemoViews();
+    const params = new URLSearchParams(window.location.search);
+    if(params.get('demo')){
+      openSamplePanel();
+    }
+  });
+
+  imageInput.addEventListener('change', () => {
+    const file = imageInput.files && imageInput.files[0];
+    selectedFile = file || null;
+    setPreview(selectedFile);
+  });
+</script>
+{% endblock %}
