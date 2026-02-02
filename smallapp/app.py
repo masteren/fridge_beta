@@ -97,6 +97,10 @@ def _demo_cache_path(image_bytes: bytes) -> Path:
     return cache_dir / f"{digest}.json"
 
 
+def _sha256_digest(image_bytes: bytes) -> str:
+    return hashlib.sha256(image_bytes).hexdigest()
+
+
 def _read_demo_cache(path: Path) -> Optional[List[Dict[str, object]]]:
     if not path.exists():
         return None
@@ -120,6 +124,41 @@ def _write_demo_cache(path: Path, ingredients: List[Dict[str, object]]) -> None:
         path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     except OSError:
         return
+
+
+def _format_recognize_items(ingredients: List[Dict[str, object]]) -> List[Dict[str, object]]:
+    items: List[Dict[str, object]] = []
+    for item in ingredients:
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("name", "")).strip()
+        if not name:
+            continue
+        name_ja = str(item.get("name_ja", "")).strip() or name
+        confidence_value = item.get("confidence")
+        try:
+            confidence = float(confidence_value) if confidence_value is not None else 0.0
+        except (TypeError, ValueError):
+            confidence = 0.0
+        confidence = max(0.0, min(1.0, confidence))
+        items.append(
+            {
+                "name": name,
+                "name_ja": name_ja,
+                "confidence": confidence,
+            }
+        )
+    return items
+
+
+def mobile_login_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if "user_id" not in session:
+            return redirect(url_for("mobile_login"))
+        return view(*args, **kwargs)
+
+    return wrapped
 
 
 @app.context_processor
@@ -223,6 +262,43 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("home"))
+
+
+@app.get("/m")
+def mobile_root():
+    if "user_id" in session:
+        return redirect(url_for("mobile_scan"))
+    return redirect(url_for("mobile_login"))
+
+
+@app.route("/m/login", methods=["GET", "POST"])
+def mobile_login():
+    if request.method == "GET":
+        if "user_id" in session:
+            return redirect(url_for("mobile_scan"))
+        return render_template("mobile/login.html", error=None)
+
+    username = request.form.get("username", "").strip()
+    password = request.form.get("password", "").strip()
+
+    user = get_user_by_username(username)
+    if not user or not check_password_hash(user["password_hash"], password):
+        return render_template("mobile/login.html", error="ログインに失敗しました")
+
+    session["user_id"] = user["id"]
+    return redirect(url_for("mobile_scan"))
+
+
+@app.get("/m/logout")
+def mobile_logout():
+    session.clear()
+    return redirect(url_for("mobile_login"))
+
+
+@app.get("/m/scan")
+@mobile_login_required
+def mobile_scan():
+    return render_template("mobile/scan.html", user=current_user())
 
 
 @app.get("/dashboard")
@@ -405,6 +481,55 @@ def pantry_add():
 def vision():
     demo_catalog = _build_demo_catalog()
     return render_template("vision.html", user=current_user(), demo_catalog=demo_catalog)
+
+
+@app.post("/api/recognize")
+@login_required
+def api_recognize():
+    file = request.files.get("image")
+    if not file:
+        return jsonify({"ok": False, "error": "missing_image"}), 400
+
+    image_bytes = file.read()
+    if not image_bytes:
+        return jsonify({"ok": False, "error": "empty_image"}), 400
+
+    digest = _sha256_digest(image_bytes)
+    cache_path = _demo_cache_path(image_bytes)
+    cached_ingredients = _read_demo_cache(cache_path)
+    if cached_ingredients is not None:
+        return jsonify(
+            {
+                "ok": True,
+                "sha256": digest,
+                "items": _format_recognize_items(cached_ingredients),
+            }
+        )
+
+    mime_type = file.mimetype or "image/jpeg"
+    try:
+        ingredients = recognize_ingredients_from_bytes(image_bytes, mime_type)
+    except MissingAPIKeyError as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 500
+    except VisionTimeoutError as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 504
+    except NonJsonResponseError as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 502
+    except OpenAIVisionError as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 502
+    except Exception:
+        return jsonify({"ok": False, "error": "unknown_error"}), 500
+
+    if ingredients:
+        _write_demo_cache(cache_path, ingredients)
+
+    return jsonify(
+        {
+            "ok": True,
+            "sha256": digest,
+            "items": _format_recognize_items(ingredients),
+        }
+    )
 
 
 @app.post("/api/vision/ingredients")

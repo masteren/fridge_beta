@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mobile Login | AI Pantry OS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='mobile.css') }}">
+</head>
+<body class="page mobile-page">
+  <main class="mobile-shell">
+    <header class="mobile-topbar">
+      <a class="brand" href="{{ url_for('home') }}">
+        <img class="logo" src="{{ url_for('static', filename='big_logo.png') }}" alt="AI Pantry OS">
+        <div>
+          <h1>AI Pantry OS</h1>
+          <small>Mobile Login</small>
+        </div>
+      </a>
+    </header>
+
+    <section class="card mobile-card">
+      <div class="card-h">
+        <h3>ログイン</h3>
+        <small>スマホ専用</small>
+      </div>
+      <div class="card-b">
+        <p class="helper">アカウント情報を入力してください。</p>
+        {% if error %}
+          <div class="mobile-alert" role="alert">{{ error }}</div>
+        {% endif %}
+        <form class="form" method="post" action="{{ url_for('mobile_login') }}">
+          <label>ユーザー名</label>
+          <input name="username" placeholder="demo" required />
+          <label>パスワード</label>
+          <input name="password" type="password" placeholder="••••••••" required />
+          <button class="btn primary block" type="submit">ログイン</button>
+        </form>
+        <p class="helper u-mt12">デモログイン: <kbd>demo</kbd> / <kbd>demo1234</kbd></p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

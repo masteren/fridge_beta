@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mobile Scan | AI Pantry OS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='mobile.css') }}">
+</head>
+<body class="page mobile-page">
+  <main class="mobile-shell">
+    <header class="mobile-topbar">
+      <div class="brand">
+        <img class="logo" src="{{ url_for('static', filename='big_logo.png') }}" alt="AI Pantry OS">
+        <div>
+          <h1>AI Pantry OS</h1>
+          <small>Mobile Vision Scan</small>
+        </div>
+      </div>
+      <a class="btn small" href="{{ url_for('mobile_logout') }}">ログアウト</a>
+    </header>
+
+    <section class="card mobile-card">
+      <div class="card-h">
+        <h3>AI 認識</h3>
+        <small>アップロード / 撮影</small>
+      </div>
+      <div class="card-b">
+        <div class="form">
+          <label>拍照/选择图片</label>
+          <input id="mobileImageInput" type="file" accept="image/*" capture="environment" />
+          <div id="mobilePreview" class="mobile-preview" aria-live="polite">
+            <span class="helper">画像プレビューがここに表示されます。</span>
+          </div>
+          <div class="mobile-actions">
+            <button id="mobileScanBtn" class="btn primary block" type="button">AI認識</button>
+          </div>
+          <div class="mobile-status" aria-live="polite">
+            <span id="mobileStatusText" class="helper">待機中</span>
+            <span id="mobileStatusBadge" class="mobile-badge is-hidden">Live</span>
+          </div>
+          <div id="mobileErrorText" class="mobile-alert is-hidden" role="alert"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card mobile-card">
+      <div class="card-h">
+        <h3>認識結果</h3>
+        <small>食材一覧</small>
+      </div>
+      <div class="card-b">
+        <ul id="mobileResultList" class="mobile-results">
+          <li class="mobile-result muted">まだ結果がありません。</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='mobile_scan.js') }}"></script>
+</body>
+</html>
