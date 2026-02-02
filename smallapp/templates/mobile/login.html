@@ -29,7 +29,7 @@
         {% if error %}
           <div class="mobile-alert" role="alert">{{ error }}</div>
         {% endif %}
-        <form class="form" method="post" action="{{ url_for('mobile_login') }}">
+        <form class="form" method="post" action="{{ url_for('mobile_login_post') }}">
           <label>ユーザー名</label>
           <input name="username" placeholder="demo" required />
           <label>パスワード</label>

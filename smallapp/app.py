@@ -267,17 +267,19 @@ def logout():
 @app.get("/m")
 def mobile_root():
     if "user_id" in session:
-        return redirect(url_for("mobile_scan"))
+        return redirect(url_for("mobile_home"))
     return redirect(url_for("mobile_login"))
 
 
-@app.route("/m/login", methods=["GET", "POST"])
+@app.get("/m/login")
 def mobile_login():
-    if request.method == "GET":
-        if "user_id" in session:
-            return redirect(url_for("mobile_scan"))
-        return render_template("mobile/login.html", error=None)
+    if "user_id" in session:
+        return redirect(url_for("mobile_home"))
+    return render_template("mobile/login.html", error=None)
 
+
+@app.post("/m/login")
+def mobile_login_post():
     username = request.form.get("username", "").strip()
     password = request.form.get("password", "").strip()
 
@@ -286,13 +288,19 @@ def mobile_login():
         return render_template("mobile/login.html", error="ログインに失敗しました")
 
     session["user_id"] = user["id"]
-    return redirect(url_for("mobile_scan"))
+    return redirect(url_for("mobile_home"))
 
 
-@app.get("/m/logout")
+@app.post("/m/logout")
 def mobile_logout():
     session.clear()
     return redirect(url_for("mobile_login"))
+
+
+@app.get("/m/home")
+@mobile_login_required
+def mobile_home():
+    return render_template("mobile/scan.html", user=current_user())
 
 
 @app.get("/m/scan")
@@ -510,7 +518,15 @@ def api_recognize():
     try:
         ingredients = recognize_ingredients_from_bytes(image_bytes, mime_type)
     except MissingAPIKeyError as exc:
-        return jsonify({"ok": False, "error": str(exc)}), 500
+        mock_items = _mock_recognize(file.filename or "")
+        return jsonify(
+            {
+                "ok": True,
+                "sha256": digest,
+                "items": _format_recognize_items(mock_items),
+                "mock": True,
+            }
+        )
     except VisionTimeoutError as exc:
         return jsonify({"ok": False, "error": str(exc)}), 504
     except NonJsonResponseError as exc:

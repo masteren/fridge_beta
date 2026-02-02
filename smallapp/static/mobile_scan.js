@@ -158,7 +158,22 @@ async function handleScan() {
       method: 'POST',
       body: formData,
     });
-    const data = await response.json();
+    if (response.redirected) {
+      setError('ログインが必要です。');
+      setStatus('ログインが必要です。', null);
+      clearResults('結果を取得できませんでした。');
+      return;
+    }
+
+    let data = null;
+    try {
+      data = await response.json();
+    } catch (error) {
+      setError('サーバー応答を解析できませんでした。');
+      setStatus('エラーが発生しました。', null);
+      clearResults('結果を取得できませんでした。');
+      return;
+    }
     if (!response.ok || !data.ok) {
       const errorMessage = data.error || '認識に失敗しました。';
       setError(errorMessage);

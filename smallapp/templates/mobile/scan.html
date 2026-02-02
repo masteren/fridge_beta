@@ -17,7 +17,9 @@
           <small>Mobile Vision Scan</small>
         </div>
       </div>
-      <a class="btn small" href="{{ url_for('mobile_logout') }}">ログアウト</a>
+      <form method="post" action="{{ url_for('mobile_logout') }}">
+        <button class="btn small" type="submit">ログアウト</button>
+      </form>
     </header>
 
     <section class="card mobile-card">
