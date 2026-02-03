@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
+from dotenv import load_dotenv
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from db import (
@@ -38,6 +39,8 @@ from services.openai_vision import (
     VisionTimeoutError,
     recognize_ingredients_from_bytes,
 )
+
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-key")

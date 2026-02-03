@@ -28,7 +28,10 @@
           <div class="demo-filename" id="fileNameText">選択なし</div>
           <input type="file" id="imageInput" accept="image/*" />
           <div id="previewWrap" class="demo-preview u-mt8" style="display:none;">
-            <img id="previewImage" alt="選択画像プレビュー" />
+            <div id="previewStage" class="demo-preview-stage">
+              <img id="previewImage" alt="選択画像プレビュー" />
+              <div id="bboxLayer" class="demo-bbox-layer"></div>
+            </div>
           </div>
           <div class="smallrow">
             <button class="btn primary" type="button" onclick="runVision()">解析開始</button>
@@ -141,16 +144,20 @@
   const cacheBadge = document.getElementById('cacheBadge');
   const previewWrap = document.getElementById('previewWrap');
   const previewImage = document.getElementById('previewImage');
+  const previewStage = document.getElementById('previewStage');
+  const bboxLayer = document.getElementById('bboxLayer');
   const imageInput = document.getElementById('imageInput');
   const fileNameText = document.getElementById('fileNameText');
   const confirmModal = document.getElementById('confirmModal');
   const confirmImage = document.getElementById('confirmImage');
   let selectedFile = null;
+  let activeRow = null;
 
   function setPreview(file){
     if(!file){
       previewWrap.style.display = 'none';
       previewImage.removeAttribute('src');
+      clearActiveRow();
       fileNameText.textContent = '選択なし';
       return;
     }
@@ -273,14 +280,16 @@
     const tbody = document.querySelector('#resultTable tbody');
     if(!items || items.length === 0){
       tbody.innerHTML = '<tr><td class="muted" colspan="4">まだ結果がありません。</td></tr>';
+      clearActiveRow();
       return;
     }
-    tbody.innerHTML = items.map(item => {
+    tbody.innerHTML = items.map((item, index) => {
       const qty = item.quantity !== undefined ? item.quantity : '-';
       const conf = item.confidence !== undefined ? item.confidence : '-';
       const unit = item.unit !== undefined ? item.unit : '個';
+      const bboxData = item.bbox ? encodeURIComponent(JSON.stringify(item.bbox)) : '';
       return `
-        <tr>
+        <tr data-index="${index}" data-bbox="${bboxData}">
           <td><input value="${item.name}" data-field="name" /></td>
           <td><input value="${qty}" data-field="quantity" style="width:84px" /></td>
           <td><input value="${unit}" data-field="unit" style="width:84px" /></td>
@@ -288,6 +297,7 @@
         </tr>
       `;
     }).join('');
+    attachRowHandlers();
   }
 
   function clearResult(){
@@ -298,6 +308,73 @@
     setCacheBadge(null);
     renderRows([]);
     document.getElementById('saveStatus').textContent = '';
+  }
+
+  function clearActiveRow(){
+    if(activeRow){
+      activeRow.classList.remove('is-active');
+    }
+    activeRow = null;
+    if(bboxLayer){
+      bboxLayer.innerHTML = '';
+    }
+  }
+
+  function showBboxFromRow(row){
+    if(!bboxLayer){
+      return;
+    }
+    bboxLayer.innerHTML = '';
+    const raw = row ? row.dataset.bbox : '';
+    if(!raw){
+      return;
+    }
+    let bbox = null;
+    try{
+      bbox = JSON.parse(decodeURIComponent(raw));
+    }catch(e){
+      bbox = null;
+    }
+    if(!bbox){
+      return;
+    }
+    const box = document.createElement('div');
+    box.className = 'demo-bbox-box is-active';
+    box.style.left = `${bbox.x * 100}%`;
+    box.style.top = `${bbox.y * 100}%`;
+    box.style.width = `${bbox.w * 100}%`;
+    box.style.height = `${bbox.h * 100}%`;
+    bboxLayer.appendChild(box);
+  }
+
+  function setActiveRow(row){
+    if(activeRow === row){
+      return;
+    }
+    if(activeRow){
+      activeRow.classList.remove('is-active');
+    }
+    activeRow = row;
+    if(activeRow){
+      activeRow.classList.add('is-active');
+      showBboxFromRow(activeRow);
+    }else{
+      showBboxFromRow(null);
+    }
+  }
+
+  function attachRowHandlers(){
+    const rows = Array.from(document.querySelectorAll('#resultTable tbody tr[data-index]'));
+    rows.forEach(row => {
+      row.addEventListener('click', () => {
+        setActiveRow(row);
+      });
+      row.querySelectorAll('input').forEach(input => {
+        input.addEventListener('focus', () => {
+          setActiveRow(row);
+        });
+      });
+    });
   }
 
   function openSamplePanel(){
@@ -409,6 +486,16 @@
     const file = imageInput.files && imageInput.files[0];
     selectedFile = file || null;
     setPreview(selectedFile);
+    clearActiveRow();
   });
+
+  if(previewStage){
+    previewStage.addEventListener('click', (event) => {
+      if(event.target && event.target.classList.contains('demo-bbox-box')){
+        return;
+      }
+      clearActiveRow();
+    });
+  }
 </script>
 {% endblock %}

@@ -32,6 +32,22 @@ def _normalize_number(value: Any) -> Optional[float]:
         return None
 
 
+def _normalize_bbox(value: Any) -> Optional[Dict[str, float]]:
+    if not isinstance(value, dict):
+        return None
+    x = _normalize_number(value.get("x"))
+    y = _normalize_number(value.get("y"))
+    w = _normalize_number(value.get("w"))
+    h = _normalize_number(value.get("h"))
+    if x is None or y is None or w is None or h is None:
+        return None
+    if w <= 0 or h <= 0:
+        return None
+    def clamp(v: float) -> float:
+        return max(0.0, min(1.0, v))
+    return {"x": clamp(x), "y": clamp(y), "w": clamp(w), "h": clamp(h)}
+
+
 def recognize_ingredients_from_bytes(
     image_bytes: bytes,
     mime_type: str,
@@ -65,8 +81,19 @@ def recognize_ingredients_from_bytes(
                                         "quantity": {"type": ["number", "null"]},
                                         "confidence": {"type": ["number", "null"]},
                                         "unit": {"type": ["string", "null"]},
+                                        "bbox": {
+                                            "type": ["object", "null"],
+                                            "properties": {
+                                                "x": {"type": "number"},
+                                                "y": {"type": "number"},
+                                                "w": {"type": "number"},
+                                                "h": {"type": "number"},
+                                            },
+                                            "required": ["x", "y", "w", "h"],
+                                            "additionalProperties": False,
+                                        },
                                     },
-                                    "required": ["name", "quantity", "confidence", "unit"],
+                                    "required": ["name", "quantity", "confidence", "unit", "bbox"],
                                     "additionalProperties": False,
                                 },
                             }
@@ -83,7 +110,9 @@ def recognize_ingredients_from_bytes(
                         {
                             "type": "input_text",
                             "text": (
-                                "画像内の食材を識別してください。"
+                                "画像内の食材を識別してください。各食材に対して画像内の位置を、"
+                                "左上基準の正規化座標 (0-1) で bbox={x,y,w,h} として返してください。"
+                                "位置が不明な場合は bbox に null を入れてください。"
                             ),
                         },
                         {"type": "input_image", "image_url": data_url},
@@ -117,12 +146,18 @@ def recognize_ingredients_from_bytes(
             continue
         quantity = _normalize_number(item.get("quantity"))
         confidence = _normalize_number(item.get("confidence"))
+        unit = item.get("unit")
+        bbox = _normalize_bbox(item.get("bbox"))
 
         entry: Dict[str, Any] = {"name": name}
         if quantity is not None:
             entry["quantity"] = quantity
         if confidence is not None:
             entry["confidence"] = confidence
+        if isinstance(unit, str) and unit.strip():
+            entry["unit"] = unit.strip()
+        if bbox is not None:
+            entry["bbox"] = bbox
         results.append(entry)
 
     return results
