@@ -8,8 +8,13 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
-from dotenv import load_dotenv
 from werkzeug.security import check_password_hash, generate_password_hash
+
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    def load_dotenv(*args, **kwargs):
+        return False
 
 from db import (
     add_cooking_log,

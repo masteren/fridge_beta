@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   {% block head %}{% endblock %}
 </head>
-<body class="page">
+<body class="page{% if request.endpoint == 'vision' %} page-vision{% endif %}">
   <div class="app">
     <!-- Sidebar -->
     <aside class="sidebar">

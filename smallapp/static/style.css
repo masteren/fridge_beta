@@ -30,12 +30,19 @@ body{
   margin:0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
   color:var(--txt);
+  --character-bg: url("character.png");
   background:
+    linear-gradient(180deg, rgba(7,10,18,.72), rgba(11,16,34,.82)),
     radial-gradient(1200px 700px at 20% 10%, rgba(77,163,255,.18), transparent 55%),
     radial-gradient(900px 600px at 70% 0%, rgba(139,92,255,.18), transparent 55%),
     radial-gradient(1000px 700px at 65% 90%, rgba(48,255,168,.10), transparent 55%),
+    var(--character-bg) calc(100% - 48px) bottom / auto 85% no-repeat fixed,
+    url("main_background.png") center / cover no-repeat fixed,
     linear-gradient(180deg, var(--bg0), var(--bg1));
   overflow-x:hidden;
+}
+.page-vision{
+  --character-bg: url("future_character.png");
 }
 
 a{color:inherit; text-decoration:none}
@@ -79,7 +86,9 @@ kbd{
   display:flex; align-items:center; gap:14px;
   padding:12px 18px;
   border-bottom:1px solid var(--stroke);
-  background: linear-gradient(180deg, rgba(10,14,28,.75), rgba(10,14,28,.45));
+  background:
+    linear-gradient(180deg, rgba(10,14,28,.42), rgba(10,14,28,.20)),
+    url("top_background.png") center top / cover no-repeat;
   backdrop-filter: blur(14px);
 }
 .brand{
@@ -170,10 +179,17 @@ kbd{
   height:100vh;
   padding:18px 14px;
   border-right: 1px solid var(--stroke);
-  background: linear-gradient(180deg, rgba(10,14,28,.55), rgba(10,14,28,.25));
+  background:
+    linear-gradient(180deg, rgba(10,14,28,.78), rgba(10,14,28,.42)),
+    url("top_background.png") left center / cover no-repeat;
   backdrop-filter: blur(14px);
   z-index: 2;
   pointer-events: auto;
+}
+.page-vision .sidebar{
+  background:
+    linear-gradient(180deg, rgba(10,14,28,.78), rgba(10,14,28,.42)),
+    url("future_background.png") left center / cover no-repeat;
 }
 @media (max-width: 980px){
   .sidebar{display:none}
